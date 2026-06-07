@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paweł Śleziński — Portfolio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg-primary-dark':  '#0F172A',
+            'bg-card-dark':     '#1E293B',
+            'bg-hover-dark':    '#334155',
+            'text-primary-dark':'#F8FAFC',
+            'text-sec-dark':    '#94A3B8',
+            'border-dark':      '#334155',
+            'bg-primary-light': '#F8FAFC',
+            'bg-card-light':    '#FFFFFF',
+            'bg-hover-light':   '#F1F5F9',
+            'text-primary-light':'#0F172A',
+            'text-sec-light':   '#475569',
+            'border-light':     '#E2E8F0',
+            'accent-blue':      '#3B82F6',
+            'accent-blue-l':    '#2563EB',
+            'accent-purple':    '#8B5CF6',
+            'accent-purple-l':  '#7C3AED',
+            'accent-teal':      '#06B6D4',
+            'accent-teal-l':    '#0891B2',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>emailjs.init('eBz_8P8lmHcWhp3Cu');</script>
+  <style>
+    * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+    html { scroll-behavior: smooth; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeInUp 0.6s ease forwards; }
+    .gradient-btn {
+      background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    }
+    .gradient-btn:hover {
+      background: linear-gradient(135deg, #2563EB, #7C3AED);
+    }
+    .hero-gradient {
+      background: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
+    }
+    .card-glow-dark:hover {
+      box-shadow: 0 0 20px rgba(59,130,246,0.15);
+    }
+    .card-glow-light:hover {
+      box-shadow: 0 0 20px rgba(37,99,235,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ── Dane ── */
+    const skills = [
+      { icon: '🌐', name: 'HTML & CSS', desc: 'Semantyczny markup, nowoczesny CSS' },
+      { icon: '⚡', name: 'JavaScript', desc: 'ES6+, asynchroniczność, DOM' },
+      { icon: '⚛️', name: 'React', desc: 'Hooki, komponenty, stan' },
+      { icon: '🎨', name: 'Tailwind CSS', desc: 'Utility-first styling' },
+      { icon: '🛠️', name: 'Git & GitHub', desc: 'Wersjonowanie kodu' },
+      { icon: '📱', name: 'Responsive Design', desc: 'Mobile-first, wszystkie urządzenia' },
+    ];
+
+    const projects = [
+      {
+        emoji: '🔨',
+        title: 'RemontPro – Strona Firmowa',
+        desc: 'Kompletna strona internetowa dla firmy remontowej. Galeria realizacji z lightboxem, formularz kontaktowy z walidacją, animowane liczniki statystyk i w pełni responsywny design w stylu industrialnym.',
+        tags: ['HTML', 'CSS', 'JavaScript', 'Responsive'],
+        link: 'https://pawelslezinski707-code.github.io/remontpro',
+        placeholder: false,
+      },
+      {
+        emoji: '🚀',
+        title: 'Wkrótce',
+        desc: 'Kolejny projekt już w drodze. Wróć niebawem!',
+        tags: [],
+        link: null,
+        placeholder: true,
+      },
+    ];
+
+    /* ── Hook: tryb ciemny ── */
+    function useDarkMode() {
+      const [dark, setDark] = useState(() =>
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      );
+
+      useEffect(() => {
+        const root = document.documentElement;
+        dark ? root.classList.add('dark') : root.classList.remove('dark');
+      }, [dark]);
+
+      return [dark, setDark];
+    }
+
+    /* ── Hook: fade-in on scroll ── */
+    function useFadeIn() {
+      const ref = useRef(null);
+      useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+          ([entry]) => { if (entry.isIntersecting) { el.classList.add('fade-in'); obs.disconnect(); } },
+          { threshold: 0.15 }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
+      return ref;
+    }
+
+    /* ── Komponenty ── */
+
+    function ThemeToggle({ dark, setDark }) {
+      return (
+        <button
+          onClick={() => setDark(d => !d)}
+          className="p-2 rounded-lg border border-border-light dark:border-border-dark
+                     bg-bg-card-light dark:bg-bg-card-dark
+                     text-text-primary-light dark:text-text-primary-dark
+                     hover:bg-bg-hover-light dark:hover:bg-bg-hover-dark
+                     transition-all duration-300 text-lg"
+          aria-label="Przełącz motyw"
+        >
+          {dark ? '☀️' : '🌙'}
+        </button>
+      );
+    }
+
+    function Nav({ dark, setDark }) {
+      return (
+        <nav className="fixed top-0 w-full z-50
+                        bg-bg-primary-light/80 dark:bg-bg-primary-dark/80
+                        backdrop-blur-md border-b border-border-light dark:border-border-dark">
+          <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="font-bold text-lg text-accent-blue bg-transparent border-none cursor-pointer">
+              Moje Portfolio
+            </button>
+            <div className="flex items-center gap-6">
+              {[['O mnie','o-mnie'],['Umiejętności','umiejetnosci'],['Projekty','projekty'],['Kontakt','kontakt']].map(([label, id]) => (
+                <button
+                  key={id}
+                  onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })}
+                  className="hidden sm:block text-sm font-medium
+                             text-text-sec-light dark:text-text-sec-dark
+                             hover:text-accent-blue dark:hover:text-accent-blue
+                             transition-colors duration-200 bg-transparent border-none cursor-pointer"
+                >
+                  {label}
+                </button>
+              ))}
+              <ThemeToggle dark={dark} setDark={setDark} />
+            </div>
+          </div>
+        </nav>
+      );
+    }
+
+    function Hero() {
+      return (
+        <section className="min-h-screen flex items-center justify-center
+                            bg-bg-primary-light dark:bg-bg-primary-dark
+                            pt-16 px-6 text-center">
+          <div className="max-w-2xl fade-in">
+            <div className="w-24 h-24 rounded-full hero-gradient mx-auto mb-6
+                            flex items-center justify-center text-4xl shadow-lg">
+              👨‍💻
+            </div>
+            <h1 className="text-4xl sm:text-6xl font-extrabold mb-4
+                           text-text-primary-light dark:text-text-primary-dark tracking-tight">
+              Moje{' '}
+              <span className="bg-gradient-to-r from-accent-blue to-accent-purple
+                               bg-clip-text text-transparent">
+                Portfolio
+              </span>
+            </h1>
+            <p className="text-lg text-text-sec-light dark:text-text-sec-dark mb-8 max-w-lg mx-auto">
+              Na tej stronie możesz zobaczyć moje projekty. Uczę się nowych technologii i rozwijam swoje umiejętności każdego dnia.
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <a href="#projekty"
+                 className="gradient-btn text-white font-semibold px-6 py-3
+                            rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                Zobacz projekty
+              </a>
+              <a href="#kontakt"
+                 className="px-6 py-3 rounded-lg font-semibold border
+                            border-border-light dark:border-border-dark
+                            text-text-primary-light dark:text-text-primary-dark
+                            hover:bg-bg-hover-light dark:hover:bg-bg-hover-dark
+                            transition-all duration-300">
+                Kontakt
+              </a>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function AboutSection() {
+      const ref = useFadeIn();
+      return (
+        <section id="o-mnie"
+                 className="py-20 px-6 bg-bg-card-light dark:bg-bg-card-dark">
+          <div ref={ref} className="max-w-6xl mx-auto opacity-0">
+            <h2 className="text-3xl font-extrabold mb-4
+                           text-text-primary-light dark:text-text-primary-dark">
+              O mnie
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full mb-8" />
+            <div className="max-w-2xl text-text-sec-light dark:text-text-sec-dark leading-relaxed text-base space-y-4">
+              <p>
+                Cześć! Mam na imię Paweł i jestem web developerem z pasją do tworzenia stron internetowych, które łączą estetykę z funkcjonalnością.
+              </p>
+              <p>
+                Współpracuję zarówno z osobami prywatnymi, jak i firmami — niezależnie od tego, czy potrzebujesz eleganckiej wizytówki online, rozbudowanego portfolio, czy profesjonalnej strony dla Twojego biznesu. Każdy projekt traktuję indywidualnie, bo wierzę, że dobra strona internetowa to taka, która odzwierciedla charakter i cele jej właściciela.
+              </p>
+              <p>
+                Co mnie wyróżnia? Nie tworzę szablonowych rozwiązań. Każda strona, którą buduję, jest przemyślana od podstaw — od responsywnego designu, przez szybkość działania, po intuicyjną nawigację. Zależy mi na tym, żeby Twoja strona nie tylko przyciągała uwagę, ale też pomagała Ci zdobywać klientów i budować wiarygodność w sieci.
+              </p>
+              <p>
+                Stawiam na przejrzystą komunikację, terminowość i bliską współpracę na każdym etapie — od pierwszego pomysłu aż po wdrożenie.
+              </p>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function SkillCard({ icon, name, desc, dark }) {
+      return (
+        <div className={`p-6 rounded-xl border
+                        bg-bg-card-light dark:bg-bg-card-dark
+                        border-border-light dark:border-border-dark
+                        hover:bg-bg-hover-light dark:hover:bg-bg-hover-dark
+                        hover:scale-[1.02] transition-all duration-300 cursor-default
+                        ${dark ? 'card-glow-dark' : 'card-glow-light'}`}>
+          <div className="text-3xl mb-3">{icon}</div>
+          <h3 className="font-bold text-text-primary-light dark:text-text-primary-dark mb-1">{name}</h3>
+          <p className="text-sm text-text-sec-light dark:text-text-sec-dark">{desc}</p>
+        </div>
+      );
+    }
+
+    function SkillsSection({ dark }) {
+      const ref = useFadeIn();
+      return (
+        <section id="umiejetnosci"
+                 className="py-20 px-6 bg-bg-primary-light dark:bg-bg-primary-dark">
+          <div ref={ref} className="max-w-6xl mx-auto opacity-0">
+            <h2 className="text-3xl font-extrabold mb-4
+                           text-text-primary-light dark:text-text-primary-dark">
+              Umiejętności
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full mb-8" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              {skills.map((s, i) => (
+                <SkillCard key={i} {...s} dark={dark} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function ProjectCard({ emoji, title, desc, tags, link, placeholder, dark }) {
+      return (
+        <div className={`p-6 rounded-xl border transition-all duration-300
+                        bg-bg-card-light dark:bg-bg-card-dark
+                        border-border-light dark:border-border-dark
+                        ${placeholder
+                          ? 'border-dashed opacity-50'
+                          : `hover:scale-[1.02] hover:bg-bg-hover-light dark:hover:bg-bg-hover-dark cursor-pointer ${dark ? 'card-glow-dark' : 'card-glow-light'}`
+                        }`}>
+          <div className="text-3xl mb-3">{emoji}</div>
+          <h3 className="font-bold text-text-primary-light dark:text-text-primary-dark mb-2">{title}</h3>
+          <p className="text-sm text-text-sec-light dark:text-text-sec-dark mb-4">{desc}</p>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {tags.map((t, i) => (
+                <span key={i}
+                      className="text-xs font-semibold px-3 py-1 rounded-full
+                                 bg-accent-blue/10 dark:bg-accent-blue/20
+                                 text-accent-blue-l dark:text-accent-blue">
+                  {t}
+                </span>
+              ))}
+            </div>
+          )}
+          {link && (
+            <a href={link} target="_blank" rel="noopener noreferrer"
+               className="text-sm font-semibold text-accent-blue hover:underline">
+              Zobacz projekt →
+            </a>
+          )}
+        </div>
+      );
+    }
+
+    function ProjectsSection({ dark }) {
+      const ref = useFadeIn();
+      return (
+        <section id="projekty"
+                 className="py-20 px-6 bg-bg-card-light dark:bg-bg-card-dark">
+          <div ref={ref} className="max-w-6xl mx-auto opacity-0">
+            <h2 className="text-3xl font-extrabold mb-4
+                           text-text-primary-light dark:text-text-primary-dark">
+              Projekty
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full mb-8" />
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((p, i) => (
+                <ProjectCard key={i} {...p} dark={dark} />
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function ContactSection() {
+      const ref = useFadeIn();
+      const [sent, setSent] = useState('');
+      const [form, setForm] = useState({ name: '', email: '', msg: '' });
+
+      async function handleSubmit(e) {
+        e.preventDefault();
+        setSent('sending');
+        try {
+          await emailjs.send('service_zok8rdh', 'template_4nb0v18', {
+            from_name: form.name,
+            from_email: form.email,
+            message: form.msg,
+          });
+          setSent('ok');
+          setForm({ name: '', email: '', msg: '' });
+        } catch(err) {
+          console.error('EmailJS error:', JSON.stringify(err));
+          setSent('error');
+        }
+      }
+
+      return (
+        <section id="kontakt"
+                 className="py-20 px-6 bg-bg-primary-light dark:bg-bg-primary-dark">
+          <div ref={ref} className="max-w-6xl mx-auto opacity-0">
+            <h2 className="text-3xl font-extrabold mb-4
+                           text-text-primary-light dark:text-text-primary-dark">
+              Kontakt
+            </h2>
+            <div className="w-12 h-1 bg-gradient-to-r from-accent-blue to-accent-purple rounded-full mb-8" />
+            <div className="grid sm:grid-cols-2 gap-12">
+              <div>
+                <p className="text-text-sec-light dark:text-text-sec-dark mb-6">
+                  Chcesz się skontaktować? Napisz do mnie — odpiszę tak szybko jak to możliwe.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-text-sec-light dark:text-text-sec-dark">
+                    <span className="text-xl">📧</span>
+                    <a href="mailto:pawelslezinski707@gmail.com"
+                       className="text-accent-blue-l dark:text-accent-blue hover:underline text-sm">
+                      pawelslezinski707@gmail.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {[
+                  { label: 'Imię', key: 'name', type: 'text', placeholder: 'Twoje imię' },
+                  { label: 'Email', key: 'email', type: 'email', placeholder: 'twoj@email.com' },
+                ].map(({ label, key, type, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-sm font-medium mb-1
+                                     text-text-primary-light dark:text-text-primary-dark">
+                      {label}
+                    </label>
+                    <input
+                      type={type}
+                      required
+                      placeholder={placeholder}
+                      value={form[key]}
+                      onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                      className="w-full px-4 py-2 rounded-lg border text-sm
+                                 bg-bg-card-light dark:bg-bg-card-dark
+                                 border-border-light dark:border-border-dark
+                                 text-text-primary-light dark:text-text-primary-dark
+                                 placeholder:text-text-sec-light dark:placeholder:text-text-sec-dark
+                                 focus:outline-none focus:ring-2 focus:ring-accent-blue
+                                 transition-all duration-300"
+                    />
+                  </div>
+                ))}
+                <div>
+                  <label className="block text-sm font-medium mb-1
+                                   text-text-primary-light dark:text-text-primary-dark">
+                    Wiadomość
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    placeholder="Twoja wiadomość..."
+                    value={form.msg}
+                    onChange={e => setForm(f => ({ ...f, msg: e.target.value }))}
+                    className="w-full px-4 py-2 rounded-lg border text-sm resize-none
+                               bg-bg-card-light dark:bg-bg-card-dark
+                               border-border-light dark:border-border-dark
+                               text-text-primary-light dark:text-text-primary-dark
+                               placeholder:text-text-sec-light dark:placeholder:text-text-sec-dark
+                               focus:outline-none focus:ring-2 focus:ring-accent-blue
+                               transition-all duration-300"
+                  />
+                </div>
+                <button type="submit"
+                        className="gradient-btn text-white font-semibold px-6 py-3
+                                   rounded-lg w-full hover:scale-[1.02] transition-all duration-300">
+                  {sent === 'sending' ? '⏳ Wysyłanie...' : sent === 'ok' ? '✅ Wysłano!' : sent === 'error' ? '❌ Błąd, spróbuj ponownie' : 'Wyślij wiadomość'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function Footer() {
+      return (
+        <footer className="py-6 px-6 text-center border-t
+                           border-border-light dark:border-border-dark
+                           bg-bg-card-light dark:bg-bg-card-dark
+                           text-text-sec-light dark:text-text-sec-dark text-sm">
+          © 2026 Paweł Śleziński. Zbudowane z pasją. 🚀
+        </footer>
+      );
+    }
+
+    /* ── App ── */
+    function App() {
+      const [dark, setDark] = useDarkMode();
+
+      return (
+        <div className="font-sans">
+          <Nav dark={dark} setDark={setDark} />
+          <Hero />
+          <AboutSection />
+          <SkillsSection dark={dark} />
+          <ProjectsSection dark={dark} />
+          <ContactSection />
+          <Footer />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
